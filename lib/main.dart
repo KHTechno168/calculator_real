@@ -23,6 +23,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  List<String> _history = [];
   @override
   void initState() {
     super.initState();
@@ -40,9 +41,46 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.info_outline, color: Colors.blueGrey),
+            onPressed: () {
+              showAboutDialog(
+                context: context,
+                applicationName: 'Calculator Real',
+                applicationVersion: '1.0.0',
+                applicationIcon: Icon(Icons.calculate, size: 40, color: Colors.blueGrey),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: Text('Developer: Chenda Monyoudom\nEmail: monyoudom26@gmail.com\nMade in Cambodia'),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: <Widget>[
+          // Calculation History
+          if (_history.isNotEmpty)
+            Container(
+              height: 100,
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: ListView(
+                reverse: true,
+                children: _history.reversed.map((entry) => Text(
+                  entry,
+                  style: TextStyle(fontSize: 16, fontFamily: 'RobotoMono', color: Colors.grey[700]),
+                  textAlign: TextAlign.right,
+                )).toList(),
+              ),
+            ),
           new Padding(
               padding: EdgeInsets.symmetric(horizontal: 10),
               child: new TextField(
@@ -201,16 +239,22 @@ class _MyHomePageState extends State<MyHomePage> {
       increaseWidthBy: 40.0,
       increaseHeightBy: 10.0,
       callback: () {
-        //Calculate everything here
-        // Parse expression:
         Parser p = new Parser();
-        // Bind variables:
         ContextModel cm = new ContextModel();
-        Expression exp = p.parse(textControllerInput.text);
-        setState(() {
-          textControllerResult.text =
-              exp.evaluate(EvaluationType.REAL, cm).toString();
-        });
+        String input = textControllerInput.text;
+        try {
+          Expression exp = p.parse(input);
+          double result = exp.evaluate(EvaluationType.REAL, cm);
+          setState(() {
+            textControllerResult.text = result.toString();
+            _history.add('$input = $result');
+          });
+        } catch (e) {
+          setState(() {
+            textControllerResult.text = 'Error';
+            _history.add('$input = Error');
+          });
+        }
       },
       gradient: Gradients.jShine,
     );
